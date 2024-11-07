@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Output file
@@ -8,15 +7,19 @@ max_lines=500
 
 # Directories to scan. Set your directories here as an array.
 # Example: directories=("/path/to/dir1" "/path/to/dir2")
-directories=("/path/to/dir1" "/path/to/dir2")
+directories=()
 
 # Files to scan. Set your files here as an array.
 # Example: files=("/path/to/file1.sh" "/path/to/file2.conf")
-files=("/path/to/file1.sh" "/path/to/file2.conf")
+files=()
+
+# Directories or files to ignore. Set your ignored paths or patterns here as an array.
+# Example: ignore=("node_modules" ".next" "dist" ".env*" "*.log")
+ignore=("node_modules" ".next" "dist" ".env*" "*.log" "packages")
 
 # If no directories are specified, default to the current directory
 if [ ${#directories[@]} -eq 0 ]; then
-    directories=(" . ")
+    directories=(".")
 fi
 
 # Clear or create the output file
@@ -35,9 +38,15 @@ else
 fi
 echo -e "\n\n" >> "$output_file"
 
-# Find and concatenate each file from the specified directories, skipping large files
+# Build the ignore options for the find command, using -prune to skip directories
+ignore_prunes=()
+for item in "${ignore[@]}"; do
+    ignore_prunes+=(-path "*/$item" -prune -o)
+done
+
+# Find and concatenate each file from the specified directories, skipping ignored directories and large files
 for dir in "${directories[@]}"; do
-    find "$dir" -type f \( -name "*.sh" -o -name "*.conf" -o -name "*.config" -o -name "*.cnf" -o -name "*.cf" -o -name "*.yml" -o -name "Dockerfile" \) | while read -r file; do
+    find "$dir" \( "${ignore_prunes[@]}" -false \) -o -type f \( -name "*.sh" -o -name "*.tsx" -o -name "*.ts" -o -name "*.js" -o -name "*.jsx" \) -print | while read -r file; do
         # Count lines in the file
         line_count=$(wc -l < "$file")
         
