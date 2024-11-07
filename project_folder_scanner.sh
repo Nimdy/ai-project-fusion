@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Output file
@@ -9,9 +10,13 @@ max_lines=500
 # Example: directories=("/path/to/dir1" "/path/to/dir2")
 directories=("/path/to/dir1" "/path/to/dir2")
 
+# Files to scan. Set your files here as an array.
+# Example: files=("/path/to/file1.sh" "/path/to/file2.conf")
+files=("/path/to/file1.sh" "/path/to/file2.conf")
+
 # If no directories are specified, default to the current directory
 if [ ${#directories[@]} -eq 0 ]; then
-    directories=(".")
+    directories=(" . ")
 fi
 
 # Clear or create the output file
@@ -47,6 +52,27 @@ for dir in "${directories[@]}"; do
         cat "$file" >> "$output_file"
         echo -e "\n\n" >> "$output_file"
     done
+done
+
+# Process individual files specified in the files array
+for file in "${files[@]}"; do
+    if [ -f "$file" ]; then
+        # Count lines in the file
+        line_count=$(wc -l < "$file")
+        
+        # Skip the file if it exceeds the max line limit
+        if [ "$line_count" -gt "$max_lines" ]; then
+            echo "Skipping $file (too large: $line_count lines)"
+            continue
+        fi
+
+        # Add file path header and contents to output
+        echo "########## FILE: $file ##########" >> "$output_file"
+        cat "$file" >> "$output_file"
+        echo -e "\n\n" >> "$output_file"
+    else
+        echo "File $file not found. Skipping."
+    fi
 done
 
 echo "Directory structure and selected files have been combined into $output_file with headers."
