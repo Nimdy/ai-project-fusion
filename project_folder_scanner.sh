@@ -5,19 +5,20 @@ output_file="combined_data.txt"
 # Maximum lines per file (user can adjust this limit)
 max_lines=500
 # Control whether to render the full directory tree
-render_tree_output=false
+render_tree_output=true
 
 # Directories to scan. Use "NONE" to skip directory scanning or "ALL" to scan the entire project.
-# Example: directories=("src") to scan a single folder or directories=("src" "lib") to scan multiple folders.
-directories=("src")
+# Example: directories=("src" "config") to scan these folders only.
+directories=("src" "config" "scripts")
 
-# Files to scan. Set specific files to process here.
-# Example: files=("scripts/setup.sh" "config/settings.js")
-files=("scripts/example.sh" "config/sample-config.js" "src/utils/helper.ts")
+# Files to scan. Set your files here as an array.
+# Example: Specify individual files like ("config/settings.js" "src/index.ts")
+files=("src/main.ts" "config/settings.js" "scripts/deploy.sh" "src/components/ExampleComponent.tsx")
 
 # Directories or files to ignore. Use simple paths or patterns.
-# Example: ignore=("node_modules" "dist" "test" "*.log" "config/secret")
-ignore=("node_modules" "dist" "build" "public" "test" "logs" "src/private" "src/temp")
+# Example: ignore=("node_modules" "build" "dist" "logs")
+ignore=("node_modules" ".next" "dist" "build" "logs" "test"
+"src/private" "config/secret" "scripts/old-scripts")
 
 # Enable color output if the terminal supports it
 if command -v tput &> /dev/null && [ "$(tput colors)" -ge 8 ]; then
@@ -52,6 +53,21 @@ cleanup() {
         rm -f "$temp_files"
     fi
 }
+
+# Render full directory tree if render_tree_output is true
+if [[ "$render_tree_output" == true ]]; then
+    if command -v tree &> /dev/null; then
+        echo -e "${GREEN}Rendering full directory tree...${RESET}"
+        echo "########## FULL DIRECTORY TREE ##########" >> "$output_file"
+        
+        # Build the ignore pattern for the tree command
+        ignore_pattern=$(IFS="|"; echo "${ignore[*]}")
+        tree . -I "$ignore_pattern" >> "$output_file"
+        echo -e "\n\n" >> "$output_file"
+    else
+        echo -e "${RED}tree command not found. Skipping directory tree rendering.${RESET}"
+    fi
+fi
 
 # Improved ignore logic for the `find` command
 if [[ ${#directories[@]} -gt 0 && ${directories[0]} != "NONE" ]]; then
